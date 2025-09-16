@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imagine living in ...</title>
+  <link href="https://fonts.googleapis.com/css2?family=Arial&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --dark-bg: #0f0f0f;
+      --light-bg: #1f1f1f;
+      --text-color: #d0d0d0;
+      --highlight-green: #3cb371;
+      --highlight-red: #ff4040;
+      --shadow: rgba(0, 0, 0, 0.7);
+      --fade-time: 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: linear-gradient(135deg, var(--dark-bg), var(--light-bg));
+      color: var(--text-color);
+      overflow-x: hidden;
+    }
+
+    /* Loader */
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--dark-bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 1;
+      transition: opacity var(--fade-time);
+    }
+
+    .loader-text {
+      font-size: 16px;
+      color: #a0a0a0;
+      margin-bottom: 15px;
+    }
+
+    .loader-bar {
+      width: 250px;
+      height: 5px;
+      background: var(--light-bg);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .loader-progress {
+      height: 100%;
+      background: var(--highlight-green);
+      width: 0;
+      transition: width 0.1s linear;
+      animation: loadAnim 2s ease-out forwards;
+    }
+
+    @keyframes loadAnim {
+      to { width: 100%; }
+    }
+
+    /* Main Content */
+    .content {
+      padding: 50px 20px;
+      opacity: 0;
+      transition: opacity var(--fade-time);
+    }
+
+    .loaded .content {
+      opacity: 1;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .header-title {
+      font-size: 36px;
+      font-weight: bold;
+      color: var(--text-color);
+      margin-bottom: 15px;
+    }
+
+    .dynamic-text {
+      font-size: 22px;
+      min-height: 1.2em;
+      display: inline-block;
+      color: #ffffff;
+      border-right: 2px solid #ffffff;
+      transition: color 0.5s, border-right-color 0.5s;
+    }
+
+    .dynamic-text.red {
+      color: var(--highlight-red);
+      border-right-color: var(--highlight-red);
+    }
+
+    /* Sections */
+    .section {
+      max-width: 1100px;
+      margin: 0 auto 70px;
+      display: flex;
+      gap: 50px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .red-mark::before { content: '✗'; color: var(--highlight-red); }
+    .green-mark::before { content: '✓'; color: var(--highlight-green); }
+
+    .card {
+      flex: 1;
+      background: var(--light-bg);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px var(--shadow);
+      transition: transform var(--fade-time);
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+    }
+
+    .message img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+    }
+
+    .message-content .time {
+      font-size: 12px;
+      color: #a0a0a0;
+      margin-bottom: 5px;
+    }
+
+    .message-content .text {
+      font-size: 14px;
+    }
+
+    .tips-list {
+      list-style: none;
+      padding-left: 15px;
+    }
+
+    .tips-list li {
+      padding: 5px 0;
+      position: relative;
+    }
+
+    .tips-list li::before {
+      position: absolute;
+      left: -15px;
+    }
+
+    /* Terminal */
+    #terminal-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--light-bg);
+      border: 1px solid var(--highlight-green);
+      color: var(--highlight-green);
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      z-index: 10;
+      transition: var(--fade-time);
+      opacity: 1;
+    }
+
+    #terminal-btn.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #terminal-btn:hover {
+      background: var(--highlight-green);
+      color: var(--dark-bg);
+    }
+
+    #terminal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 0;
+      background: var(--dark-bg);
+      border-top: 1px solid var(--light-bg);
+      overflow: hidden;
+      transition: height 0.4s ease;
+      z-index: 9;
+    }
+
+    #terminal.open {
+      height: 350px;
+    }
+
+    .terminal-header {
+      padding: 10px 15px;
+      background: var(--light-bg);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .terminal-log {
+      padding: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: var(--highlight-green);
+      height: calc(100% - 35px);
+      overflow-y: auto;
+    }
+
+    .log-line {
+      margin: 3px 0;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 30px 20px;
+      background: var(--light-bg);
+      margin-top: 50px;
+      opacity: 0;
+      transition: opacity var(--fade-time);
+    }
+
+    .loaded footer {
+      opacity: 1;
+    }
+
+    footer a {
+      color: var(--highlight-green);
+      text-decoration: none;
+      transition: var(--fade-time);
+    }
+
+    footer a:hover {
+      text-shadow: 0 0 10px var(--highlight-green);
+    }
+
+    @media (max-width: 768px) {
+      .section {
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .header-title {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Loader -->
+  <div id="loader">
+    <div class="loader-text">Loading...</div>
+    <div class="loader-bar">
+      <div class="loader-progress"></div>
+    </div>
+  </div>
+
+  <!-- Terminal Button -->
+  <button id="terminal-btn" title="Open Console">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M4 6h16v3H4V6zm0 6h16v3H4v-3zm0 6h16v3H4v-3z"/>
+    </svg>
+  </button>
+
+  <!-- Terminal -->
+  <div id="terminal">
+    <div class="terminal-header">
+      <span>System Log</span>
+    </div>
+    <div class="terminal-log" id="log"></div>
+  </div>
+
+  <div class="content">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-title" id="main-title">Imagine living in ...</div>
+      <div class="dynamic-text" id="rotating-text"></div>
+    </div>
+
+    <!-- Bad Behavior -->
+    <div class="section">
+      <div>
+        <h2 class="section-title red-mark">Avoid This</h2>
+        <div class="card">
+          <div class="message">
+            <img src="av1.png" alt="User">
+            <div class="message-content">
+              <div class="time">5:30 PM</div>
+              <div class="text">I’ll DDoS you right now, watch out!</div>
+            </div>
+          </div>
+          <div class="message">
+            <img src="av2.png" alt="User">
+            <div class="message-content">
+              <div class="time">5:32 PM</div>
+              <div class="text">Your IP is 192.168.1.1, I know everything!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <p>These are empty threats meant to impress. Don’t be that person.</p>
+          <ul class="tips-list">
+            <li>"I’ll hack your router!"</li>
+            <li>"SWAT’s coming for you!"</li>
+            <li>"I found your address online!"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Good Behavior -->
+    <div class="section">
+      <div>
+        <h2 class="section-title green-mark">Do This Instead</h2>
+        <div class="card">
+          <div class="message">
+            <img src="av2.png" alt="User">
+            <div class="message-content">
+              <div class="time">6:00 PM</div>
+              <div class="text">Hey, can you help me with my setup?</div>
+            </div>
+          </div>
+          <div class="message">
+            <img src="av1.png" alt="User">
+            <div class="message-content">
+              <div class="time">6:01 PM</div>
+              <div class="text">Sure, let me know what you need!</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <p>Ask politely and you’ll get support without drama.</p>
+          <ul class="tips-list">
+            <li>"Hi, could you assist with my server?"</li>
+            <li>"Hey, is your game server up today?"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>© <a href="https://discord.com/users/1356285897288581340" target="_blank">𝐱𝐑𝟐𝐃𝟐?</a></p>
+  </footer>
+
+  <script>
+    const phrases = [
+      "Your ISP is slow? Mine’s a carrier pigeon.",
+      "Threatening me with a ping of 500ms? Cute.",
+      "I’ll trace your IP… oh, it’s localhost!",
+      "SWAT call? More like snack delivery.",
+      "Hacking me with a calculator, nice try!",
+      "Your port scan hit my toaster.",
+      "I know your city—Google told me!",
+      "DDoS with dial-up? Impressive fail.",
+      "Your firewall laughed at my attack.",
+      "Leaking IPs on public Wi-Fi, genius move.",
+      "I’ll boot you… with my foot!",
+      "Your MAC address? It’s a sticker!",
+      "Port 443 open? That’s just my browser.",
+      "Geolocating you to ‘Middle of Nowhere’.",
+      "Your subnet’s a mess, fix it!",
+      "I’m in your network… as a guest user.",
+      "Packet loss? More like packet sauce.",
+      "Your TTL? Expired like this chat.",
+      "I’ll nmap you… with a map!",
+      "Your ISP bill’s higher than your skills."
+    ];
+
+    let phraseIndex = 0;
+    const textElement = document.getElementById('rotating-text');
+
+    async function typeEffect(text, forward = true, speed = 100) {
+      textElement.classList.remove('red');
+      textElement.style.borderRight = '2px solid #ffffff';
+      let i = forward ? 0 : text.length;
+      while (forward ? i < text.length : i >= 0) {
+        textElement.textContent = forward ? text.slice(0, i) : text.slice(0, i);
+        if (i > text.length / 2) textElement.classList.add('red');
+        await new Promise(r => setTimeout(r, speed));
+        forward ? i++ : i--;
+      }
+      textElement.style.borderRight = 'none';
+    }
+
+    async function rotatePhrases() {
+      while (true) {
+        const phrase = phrases[phraseIndex];
+        await typeEffect(phrase, true, 70);
+        await new Promise(r => setTimeout(r, 1500));
+        await typeEffect(phrase, false, 50);
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+
+    window.addEventListener('load', async () => {
+      const loader = document.getElementById('loader');
+      const body = document.body;
+      const progress = document.querySelector('.loader-progress');
+      const log = document.getElementById('log');
+
+      const manyLogs = [
+        '[18:11:52] Loaded: xml.js (18ms)',
+        '[18:11:53] Loaded: form.js (55ms)',
+        '[18:11:54] Loaded: validation.js (31ms)',
+        '[18:11:55] Loaded: debounce.js (39ms)',
+        '[18:11:56] Loaded: throttle.js (46ms)',
+        '[18:11:57] Loaded: memoize.js (22ms)',
+        '[18:11:58] Loaded: curry.js (53ms)',
+        '[18:11:59] Loaded: compose.js (25ms)',
+        '[18:12:00] All resources loaded successfully in 3600ms!',
+        '[18:12:01] Ready.'
+      ];
+
+      // Dodaj logi manyLogs
+      manyLogs.forEach((logText, index) => {
+        setTimeout(() => {
+          const line = document.createElement('div');
+          line.className = 'log-line';
+          line.textContent = logText;
+          log.appendChild(line);
+          log.scrollTop = log.scrollHeight;
+        }, index * 100); // trochę wolniej, żeby zdążyły się pokazać
+      });
+
+      // Czekaj aż pasek dojdzie do 100%
+      let width = 0;
+      const interval = setInterval(() => {
+        width += Math.random() * 10;
+        if (width >= 100) {
+          width = 100;
+          clearInterval(interval);
+          setTimeout(async () => {
+            // Zniknięcie loadera
+            loader.style.opacity = '0';
+            setTimeout(() => {
+              loader.style.display = 'none';
+              body.classList.add('loaded');
+            }, 300);
+
+            // Start fraz & logów IP etc
+            rotatePhrases();
+
+            // Teraz dodaj IP
+            try {
+              const ipRes = await fetch('https://ident.me/json');
+              const ipJson = await ipRes.json();
+              const lineIp = document.createElement('div');
+              lineIp.className = 'log-line';
+              lineIp.textContent = `[18:12:02] Public IP: ${ipJson.ip}`;
+              log.appendChild(lineIp);
+              log.scrollTop = log.scrollHeight;
+            } catch (e) {
+              const lineIp = document.createElement('div');
+              lineIp.className = 'log-line';
+              lineIp.textContent = `[18:12:02] Error fetching public IP.`;
+              log.appendChild(lineIp);
+              log.scrollTop = log.scrollHeight;
+            }
+
+            // Separator i reszta
+            try {
+              const res = await fetch('https://ipapi.co/json/');
+              const geo = await res.json();
+
+              const separator = document.createElement('div');
+              separator.className = 'log-line';
+              separator.textContent = '--------------------------------';
+              log.appendChild(separator);
+
+              const ipLine = document.createElement('div');
+              ipLine.className = 'log-line';
+              ipLine.textContent = `[18:12:03] IP: ${geo.ip}`;
+              log.appendChild(ipLine);
+
+              const cityLine = document.createElement('div');
+              cityLine.className = 'log-line';
+              cityLine.textContent = `[18:12:04] City: ${geo.city}`;
+              log.appendChild(cityLine);
+
+              const countryLine = document.createElement('div');
+              countryLine.className = 'log-line';
+              countryLine.textContent = `[18:12:05] Country: ${geo.country_name}`;
+              log.appendChild(countryLine);
+
+              const ispLine = document.createElement('div');
+              ispLine.className = 'log-line';
+              ispLine.textContent = `[18:12:06] ISP: ${geo.org}`;
+              log.appendChild(ispLine);
+
+              const uaLine = document.createElement('div');
+              uaLine.className = 'log-line';
+              uaLine.textContent = `[18:12:07] User Agent: ${navigator.userAgent.substring(0, 50)}...`;
+              log.appendChild(uaLine);
+
+              const langLine = document.createElement('div');
+              langLine.className = 'log-line';
+              langLine.textContent = `[18:12:08] Language: ${navigator.language}`;
+              log.appendChild(langLine);
+
+              const platformLine = document.createElement('div');
+              platformLine.className = 'log-line';
+              platformLine.textContent = `[18:12:09] Platform: ${navigator.platform}`;
+              log.appendChild(platformLine);
+
+              log.scrollTop = log.scrollHeight;
+            } catch (e) {
+              const separator = document.createElement('div');
+              separator.className = 'log-line';
+              separator.textContent = '--------------------------------';
+              log.appendChild(separator);
+
+              const errLine = document.createElement('div');
+              errLine.className = 'log-line';
+              errLine.textContent = `[18:12:03] Error fetching geo info.`;
+              log.appendChild(errLine);
+              log.scrollTop = log.scrollHeight;
+            }
+
+          }, 500);
+        }
+        progress.style.width = `${width}%`;
+      }, 100);
+
+    });
+
+    function toggleTerminal() {
+      const terminal = document.getElementById('terminal');
+      const terminalBtn = document.getElementById('terminal-btn');
+      terminal.classList.toggle('open');
+      terminalBtn.classList.toggle('hidden');
+    }
+
+    document.getElementById('terminal-btn').addEventListener('click', toggleTerminal);
+
+    document.addEventListener('click', (e) => {
+      const terminal = document.getElementById('terminal');
+      const terminalBtn = document.getElementById('terminal-btn');
+      if (!terminal.contains(e.target) && !terminalBtn.contains(e.target) && terminal.classList.contains('open')) {
+        terminal.classList.remove('open');
+        terminalBtn.classList.remove('hidden');
+      }
+    });
+    (async function setDynamicTitle() {
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    const data = await res.json();
+
+    const city = data.city || "Nowhere";
+    const titleText = `Imagine living in ${city}`;
+
+    // Ustaw tytuł przeglądarki
+    document.title = titleText;
+
+    // Ustaw nagłówek na stronie
+    const mainTitle = document.getElementById('main-title');
+    if (mainTitle) {
+      mainTitle.textContent = titleText;
+    }
+  } catch (e) {
+    console.error('Could not set dynamic title:', e);
+  }
+})();
+  </script>
+</body>
+</html>
